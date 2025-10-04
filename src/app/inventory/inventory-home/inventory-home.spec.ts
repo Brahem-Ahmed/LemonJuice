@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { InventoryHome } from './inventory-home';
+import { commonTestingModules } from '../../common/common.testing';
 
 describe('InventoryHome', () => {
   let component: InventoryHome;
@@ -8,9 +9,8 @@ describe('InventoryHome', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [InventoryHome]
-    })
-    .compileComponents();
+      imports: [...commonTestingModules, InventoryHome],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(InventoryHome);
     component = fixture.componentInstance;
