@@ -26,8 +26,12 @@ jobs:
           name: Build (production)
           command: npx ng build --configuration production
       - run:
-          name: Unit tests (Karma)
-          command: npx ng test --watch=false --code-coverage
+          name: Unit tests (Karma Headless)
+          command: |
+            $bin = (Get-Command google-chrome,chromium,chrome -ErrorAction SilentlyContinue | Select-Object -First 1).Source
+            if (-not $bin) { echo "Chrome binary not found"; exit 1 }
+            set CHROME_BIN=$bin
+            npx ng test --watch=false --browsers=ChromeHeadless --code-coverage
       - store_test_results:
           path: test_results
       - store_artifacts:
