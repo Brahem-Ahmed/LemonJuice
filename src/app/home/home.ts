@@ -1,16 +1,24 @@
-import { Component, Injectable } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { RouterLink } from '@angular/router';
+import { AsyncPipe } from '@angular/common';
+import { Router } from '@angular/router';
+import { Auth } from '../auth/auth';
+import { combineLatest, filter, tap } from 'rxjs';
+import { LoginComponent } from '../login-component/login-component';
 
 @Component({
   selector: 'app-home',
-  imports: [MatButtonModule, RouterLink],
+  imports: [MatButtonModule, LoginComponent, AsyncPipe],
   template: `
-    <div class="home-container">
-      <h2 class="mat-h2">Welcome to LemonJuice!</h2>
-      <p>Your one-stop solution for all things citrus.</p>
-      <button mat-raised-button color="primary" routerLink="/manager">Login as Manger</button>
-    </div>
+    @if ((auth.authStatus$ | async)?.isAuthenticated) {
+      <div class="home-container">
+        <h2 class="mat-h2">Welcome back!</h2>
+        <p>You are signed in — visit the manager dashboard.</p>
+        <button mat-raised-button color="primary" (click)="goManager()">Go to Manager</button>
+      </div>
+    } @else {
+      <app-login></app-login>
+    }
   `,
   styleUrls: ['../../styles.scss'],
   styles: [
@@ -26,4 +34,36 @@ import { RouterLink } from '@angular/router';
     `,
   ],
 })
-export class Home {}
+export class Home implements OnInit {
+  constructor(
+    public auth: Auth,
+    private router: Router,
+  ) {}
+
+  goManager() {
+    this.router.navigate(['/manager']);
+  }
+  ngOnInit() {
+    console.log('Home component initialized');
+  }
+  login() {
+    this.auth.login('ahmed.brahem@test.com', 'password').subscribe({
+      next: () => {
+        // login stream emitted — double-check user
+        const user = this.auth.currentUser$.value;
+        if (this.auth.authStatus$.value.isAuthenticated && user?._id) {
+          this.router.navigate(['/manager']);
+        } else {
+          console.warn(
+            'Login completed but user/status not set',
+            this.auth.authStatus$.value,
+            user,
+          );
+        }
+      },
+      error: (err) => {
+        console.error('Login failed', err);
+      },
+    });
+  }
+}
